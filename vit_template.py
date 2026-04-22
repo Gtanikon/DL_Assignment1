@@ -276,7 +276,11 @@ class MultiHeadSelfAttention(nn.Module):
 
         # TODO 1.2 ── Create the four linear layers and the dropout layer
         #   described in the docstring above.
-        raise NotImplementedError("TODO 1.2: implement MultiHeadSelfAttention.__init__")
+        self.q_proj = nn.Linear(embed_dim, embed_dim, bias=True)
+        self.k_proj = nn.Linear(embed_dim, embed_dim, bias=True)
+        self.v_proj = nn.Linear(embed_dim, embed_dim, bias=True)
+        self.out_proj = nn.Linear(embed_dim, embed_dim, bias=True)
+        self.attn_drop = nn.Dropout(dropout)
 
     def forward(
         self, x: torch.Tensor
@@ -289,7 +293,28 @@ class MultiHeadSelfAttention(nn.Module):
         #     torch.matmul  or  the @ operator
         #     F.softmax(scores, dim=-1)
         #     tensor.transpose(1, 2).contiguous().reshape(B, T, self.embed_dim)
-        raise NotImplementedError("TODO 1.2: implement MultiHeadSelfAttention.forward")
+        B, T, D = x.shape
+        q = self.q_proj(x)
+        k = self.k_proj(x)
+        v = self.v_proj(x)
+
+        q = q.reshape(B, T, self.num_heads, self.head_dim).transpose(1, 2)
+        k = k.reshape(B, T, self.num_heads, self.head_dim).transpose(1, 2)
+        v = v.reshape(B, T, self.num_heads, self.head_dim).transpose(1, 2)
+
+        scores = torch.matmul(q, k.transpose(-2, -1)) * self.scale
+        attn_weights = F.softmax(scores, dim=-1)
+        attn_weights = self.attn_drop(attn_weights)
+
+        context = torch.matmul(attn_weights, v)
+        context = context.transpose(1, 2).contiguous().reshape(B, T, D)
+
+        out = self.out_proj(context)
+
+        return out, attn_weights
+
+
+        
 
 
 # ---------------------------------------------------------------------------
