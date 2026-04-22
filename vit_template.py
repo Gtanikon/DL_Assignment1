@@ -206,7 +206,11 @@ class PatchEmbedding(nn.Module):
         #
         #   Hint: after the conv you have shape (B, D, G, G).
         #   Call .flatten(2) to get (B, D, N), then .transpose(1, 2) for (B, N, D).
-        raise NotImplementedError("TODO 1.1: implement PatchEmbedding.forward")
+        # TODO 1.1: implement PatchEmbedding.forward
+        x = self.proj(x)
+        x = x.flatten(2)
+        x = x.transpose(1, 2)
+        return x
 
 
 # ---------------------------------------------------------------------------
